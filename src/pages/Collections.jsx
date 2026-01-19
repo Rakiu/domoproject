@@ -1,119 +1,137 @@
+// Collections.jsx - Borderless + Clean UI + Small Video Popup
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCollections } from "../features/collections/collectionSlice";
 
-const Collections = () => {
+const Collections = ({ readOnly }) => {
   const dispatch = useDispatch();
-  const collections = useSelector((state) => state.collections.list || []);
-  const loading = useSelector((state) => state.collections.loading);
+  const { list: collections = [], loading } = useSelector(
+    (state) => state.collections
+  );
 
   const [activeVideo, setActiveVideo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     dispatch(fetchCollections());
   }, [dispatch]);
 
+  const filteredCollections = collections.filter((c) =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const safeVideos = (videos) =>
+    (videos || []).filter((v) => v && v.thumbnail && v.videoUrl);
+
   return (
-    <div className="bg-white shadow rounded p-4">
-      <h2 className="text-xl font-semibold mb-4">All Collections</h2>
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      {/* HEADER */}
+      <div className="px-6 py-6 bg-gray-50 flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            🎞 Collections
+          </h2>
+          <p className="text-gray-500 text-sm">
+            {filteredCollections.length} collections available
+          </p>
+        </div>
 
+        {!readOnly && (
+          <input
+            type="text"
+            placeholder="Search collections..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-72 px-4 py-2.5 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+        )}
+      </div>
+
+      {/* CONTENT */}
       {loading ? (
-        <p className="text-center text-gray-500">Loading collections...</p>
+        <div className="py-20 text-center text-gray-500">
+          <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          Loading collections...
+        </div>
+      ) : filteredCollections.length === 0 ? (
+        <div className="py-20 text-center text-gray-500">
+          No collections found
+        </div>
       ) : (
-        <table className="w-full border">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 border text-left">Collection</th>
-              <th className="p-3 border text-left">Videos</th>
-            </tr>
-          </thead>
+        <div className="divide-y divide-gray-100">
+          {filteredCollections.map((collection) => {
+            const videos = safeVideos(collection.videos);
 
-          <tbody>
-            {collections.length === 0 ? (
-              <tr>
-                <td colSpan="2" className="p-4 text-center text-gray-500">
-                  No collections found
-                </td>
-              </tr>
-            ) : (
-              collections.map((collection) => {
-                // 🔥 FILTER NULL / INVALID VIDEOS
-                const safeVideos = (collection.videos || []).filter(
-                  (v) => v && v.thumbnail
-                );
+            return (
+              <div key={collection._id} className="px-6 py-6">
+                <h3 className="text-lg font-semibold mb-4">
+                  {collection.name}{" "}
+                  <span className="text-sm text-gray-400">
+                    ({videos.length})
+                  </span>
+                </h3>
 
-                return (
-                  <tr
-                    key={collection._id}
-                    className="border-t align-top"
-                  >
-                    {/* Collection Name */}
-                    <td className="p-3 border font-medium">
-                      {collection.name}
-                    </td>
-
-                    {/* Videos */}
-                    <td className="p-3 border">
-                      {safeVideos.length === 0 ? (
-                        <span className="text-gray-400 text-sm">
-                          No valid videos
-                        </span>
-                      ) : (
-                        <div className="flex gap-4 flex-wrap">
-                          {safeVideos.map((video) => (
-                            <div
-                              key={video._id}
-                              className="w-40 border rounded shadow-sm p-2"
-                            >
-                              <img
-                                src={video.thumbnail}
-                                alt={video.title}
-                                className="w-full h-24 object-cover rounded"
-                              />
-
-                              <p className="text-sm mt-2 font-medium line-clamp-2">
-                                {video.title}
-                              </p>
-
-                              {video.videoUrl && (
-                                <button
-                                  className="mt-2 text-xs text-blue-600 hover:underline"
-                                  onClick={() =>
-                                    setActiveVideo(video.videoUrl)
-                                  }
-                                >
-                                  ▶ Play Video
-                                </button>
-                              )}
-                            </div>
-                          ))}
+                {videos.length === 0 ? (
+                  <p className="text-sm text-gray-400">
+                    No videos available
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    {videos.slice(0, 8).map((video) => (
+                      <div
+                        key={video._id}
+                        onClick={() => setActiveVideo(video.videoUrl)}
+                        className="cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                      >
+                        <div className="relative">
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-full h-28 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 flex items-center justify-center transition">
+                            <span className="bg-red-600 text-white text-xs px-3 py-1 rounded-lg">
+                              ▶ Play
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+
+                        <div className="p-3">
+                          <p className="text-sm font-medium line-clamp-2 text-gray-800">
+                            {video.title}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      {/* VIDEO MODAL */}
+      {/* SMALL VIDEO POPUP */}
       {activeVideo && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-4 w-[90%] max-w-2xl">
-            <video
-              src={activeVideo}
-              controls
-              autoPlay
-              className="w-full rounded"
-            />
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative animate-scale-in">
+            {/* CLOSE */}
             <button
-              className="mt-3 text-red-500 text-sm"
               onClick={() => setActiveVideo(null)}
+              className="absolute -top-4 -right-4 bg-white shadow-xl rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
             >
-              Close
+              ✕
             </button>
+
+            {/* VIDEO */}
+            <div className="p-4">
+              <video
+                src={activeVideo}
+                controls
+                autoPlay
+                className="w-full rounded-2xl"
+              />
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 import Login from "./pages/Login";
 import PublicHome from "./pages/PublicHome";
@@ -12,20 +13,22 @@ import PublicRoute from "./routes/PublicRoute";
 
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import CreateCollection from "./pages/dashboard/CreateCollection";
-import ManageCollections from "./pages/dashboard/ManageCollections";
-import { useDispatch } from "react-redux";
+import CollectionsList from "./pages/dashboard/CollectionsList";
+import AddVideo from "./pages/dashboard/AddVideo";
+
 import { setAdminFromStorage } from "./features/auth/authSlice";
 
 const App = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(setAdminFromStorage());
   }, [dispatch]);
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* 🌍 PUBLIC HOME (Search + Collections) */}
+        {/* 🌍 PUBLIC HOME */}
         <Route
           path="/"
           element={
@@ -49,7 +52,7 @@ const App = () => {
           }
         />
 
-        {/* 🔐 DASHBOARD (ADMIN ONLY) */}
+        {/* 🔐 DASHBOARD */}
         <Route
           path="/dashboard"
           element={
@@ -58,10 +61,21 @@ const App = () => {
             </PrivateRoute>
           }
         >
+          {/* Dashboard Home */}
           <Route index element={<DashboardHome />} />
+
+          {/* Create Collection */}
           <Route path="create" element={<CreateCollection />} />
-          <Route path="collections" element={<ManageCollections />} />
+
+          {/* Collections Table */}
+          <Route path="collections" element={<CollectionsList />} />
+
+          {/* Add Video Page */}
+          <Route path="add-video" element={<AddVideo />} />
         </Route>
+
+        {/* ❌ FALLBACK */}
+        <Route path="*" element={<h2>404 | Page Not Found</h2>} />
       </Routes>
     </BrowserRouter>
   );

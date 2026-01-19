@@ -1,29 +1,65 @@
-import React from "react";
-import { useDispatch } from "react-redux";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { createCollection } from "../../features/collections/collectionSlice";
-import { useState } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const CreateCollection = () => {
   const [name, setName] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { loading } = useSelector((state) => state.collections);
+
+  const handleCreate = async () => {
+    if (!name.trim()) {
+      alert("Collection name is required");
+      return;
+    }
+
+    const res = await dispatch(createCollection(name.trim()));
+
+    if (res.meta.requestStatus === "fulfilled") {
+      navigate("/dashboard/collections");
+    }
+  };
 
   return (
-    <div className="bg-white p-4 rounded shadow">
-      <h2 className="text-xl mb-3">Create Collection</h2>
+    <Box p={{ xs: 2, md: 4 }}>
+      <Paper sx={{ p: 4, maxWidth: 500, mx: "auto" }}>
+        <Typography variant="h6" fontWeight="bold" mb={2}>
+          ➕ Create Collection
+        </Typography>
 
-      <input
-        className="border p-2 w-full mb-3"
-        placeholder="Collection name"
-        onChange={(e) => setName(e.target.value)}
-      />
+        <TextField
+          fullWidth
+          label="Collection Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      <button
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        onClick={() => dispatch(createCollection({ name }))}
-      >
-        Create
-      </button>
-    </div>
+        <Button
+          variant="contained"
+          fullWidth
+          sx={{ mt: 3, height: 48 }}
+          disabled={loading}
+          onClick={handleCreate}
+        >
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Create Collection"
+          )}
+        </Button>
+      </Paper>
+    </Box>
   );
 };
 
