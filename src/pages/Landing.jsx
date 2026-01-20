@@ -1,4 +1,4 @@
-// Landing.jsx - Clean UI + Video Play Popup
+// Landing.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { searchVideos } from "../features/youtube/youtubeSlice";
@@ -13,28 +13,23 @@ const Landing = ({ isPublic }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (query.trim()) {
-      dispatch(searchVideos(query));
-    }
+    if (query.trim()) dispatch(searchVideos(query));
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-10">
+    <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10">
       {/* SEARCH */}
-      <form onSubmit={handleSearch} className="mb-10">
-        <div className="max-w-4xl mx-auto relative">
+      <form onSubmit={handleSearch} className="mb-8">
+        <div className="flex flex-col sm:flex-row gap-4">
           <input
-            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search YouTube videos..."
-            className="w-full px-6 py-4 pr-36 text-lg rounded-2xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-md"
+            className="flex-1 px-6 py-4 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-red-500 outline-none"
           />
-
           <button
-            type="submit"
-            disabled={!query.trim() || loading}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition disabled:opacity-50"
+            disabled={loading || !query.trim()}
+            className="px-8 py-4 bg-red-600 text-white rounded-2xl font-semibold disabled:opacity-50"
           >
             {loading ? "Searching..." : "Search"}
           </button>
@@ -46,7 +41,7 @@ const Landing = ({ isPublic }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {videos.map((video) => (
             <div
-              key={video.videoId || video.id}
+              key={video.videoId || video.id?.videoId}
               onClick={() =>
                 setActiveVideoId(video.videoId || video.id?.videoId)
               }
@@ -56,37 +51,28 @@ const Landing = ({ isPublic }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 text-gray-500">
-          <h3 className="text-xl font-semibold mb-2">
-            No videos found
-          </h3>
-          <p>Try searching something else 🎥</p>
+        <div className="text-center py-16 text-gray-500">
+          No videos found 🎥
         </div>
       )}
 
-      {/* VIDEO POPUP */}
+      {/* POPUP */}
       {activeVideoId && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl relative">
-            {/* CLOSE */}
+          <div className="bg-white w-full max-w-3xl rounded-3xl relative">
             <button
               onClick={() => setActiveVideoId(null)}
-              className="absolute -top-4 -right-4 bg-white rounded-full shadow-lg w-10 h-10 flex items-center justify-center text-xl hover:bg-gray-100"
+              className="absolute -top-4 -right-4 bg-white w-10 h-10 rounded-full shadow"
             >
               ✕
             </button>
-
-            {/* YOUTUBE IFRAME */}
-            <div className="p-4">
-              <div className="aspect-video rounded-2xl overflow-hidden">
-                <iframe
-                  src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
-                  title="YouTube video player"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  className="w-full h-full"
-                />
-              </div>
+            <div className="aspect-video rounded-3xl overflow-hidden">
+              <iframe
+                src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+                allow="autoplay"
+                allowFullScreen
+                className="w-full h-full"
+              />
             </div>
           </div>
         </div>
